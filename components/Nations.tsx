@@ -20,8 +20,8 @@ export default function Nations() {
           </div>
           <div className="mono text-xs text-ash uppercase tracking-widest">
             {state
-              ? `Cycle ${state.cycle} · T-${String(state.turn).padStart(2, "0")} · ${state.season}`
-              : "awaiting first tick"}
+              ? `Cycle ${String(state.turn).padStart(2, "0")} / 120 · ${state.season}`
+              : "awaiting first cabinet"}
           </div>
         </div>
 
@@ -72,7 +72,7 @@ export default function Nations() {
                   </div>
 
                   <div>
-                    <div className="label mb-1.5">Edicts this turn</div>
+                    <div className="label mb-1.5">Edicts this cycle</div>
                     {live?.edicts && live.edicts.length > 0 ? (
                       <ul className="space-y-1.5 text-ink-soft leading-snug">
                         {live.edicts.slice(0, 3).map((e: string, j: number) => (

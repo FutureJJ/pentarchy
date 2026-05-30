@@ -44,8 +44,8 @@ export default function CableFeed() {
             <div className="border border-bone-line bg-bone-soft/30">
               <div className="flex items-center justify-between px-4 py-3 border-b border-bone-line mono text-[10px] uppercase tracking-widest text-ash">
                 <span>
-                  Cable archive · cycle 0
-                  {live ? " · live" : " · sample"}
+                  Cable archive · live
+                  {live ? "" : " (sample)"}
                 </span>
                 <span>{cables.length} entries</span>
               </div>
@@ -64,7 +64,7 @@ export default function CableFeed() {
                       <div className="grid grid-cols-[64px_1fr] gap-4">
                         <div>
                           <div className="mono text-[10px] text-ash uppercase tracking-widest">
-                            T·{String(cable.turn).padStart(2, "0")}
+                            C·{String(cable.turn).padStart(2, "0")}
                           </div>
                           <div
                             className="mono text-[10px] mt-1 uppercase tracking-widest"

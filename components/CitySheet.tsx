@@ -316,24 +316,24 @@ function Events({ nation, data }: { nation: N; data: D }) {
         style={{ borderColor: nation.ink }}
       >
         <div className="mono text-[10px] text-ash uppercase tracking-widest">
-          Cycle 0 · turn 14
+          C-14 · latest
         </div>
         <p className="text-sm text-ink mt-1 leading-relaxed italic">
           &ldquo;{data.recentEvent}.&rdquo;
         </p>
       </div>
       {[
-        ["Turn 11", "Census officials sealed quarterly ledger"],
-        ["Turn 8", "Cabinet inspector tour concluded"],
-        ["Turn 5", "Provincial magistrate sworn in"],
-        ["Turn 2", "Ceremonial guard rotation"],
+        ["C-11", "Census officials sealed quarterly ledger"],
+        ["C-08", "Cabinet inspector tour concluded"],
+        ["C-05", "Provincial magistrate sworn in"],
+        ["C-02", "Ceremonial guard rotation"],
       ].map(([t, b]) => (
         <div
           key={t as string}
           className="border-l-2 pl-4 py-1 border-bone-line"
         >
           <div className="mono text-[10px] text-ash uppercase tracking-widest">
-            Cycle 0 · {(t as string).toLowerCase()}
+            {t as string}
           </div>
           <p className="text-sm text-ink-soft mt-1 leading-relaxed">{b}</p>
         </div>

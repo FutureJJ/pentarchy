@@ -372,7 +372,7 @@ function Cabinet({ nation }: { nation: N }) {
         </div>
       ))}
       <div className="text-[10px] text-fog uppercase tracking-widest pt-2">
-        Latest decision · turn 0 · awaiting first cabinet sitting
+        Latest decision · awaiting first cabinet sitting
       </div>
     </div>
   );
@@ -632,7 +632,7 @@ function ScienceTab({ nation }: { nation: N }) {
       <div className="border border-bone-line p-3.5">
         <div className="label mb-2">Active projects</div>
         <ul className="mono text-xs space-y-1.5 text-ink-soft">
-          <li>· Cipher reform commission (T-08)</li>
+          <li>· Cipher reform commission (C-08)</li>
           <li>· Aqueduct extension survey</li>
           <li>· Standing army logistics audit</li>
         </ul>
