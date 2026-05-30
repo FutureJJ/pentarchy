@@ -22,16 +22,27 @@ const sans = Inter({
   display: "swap",
 });
 
+const DEPLOY_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://pentarchy-five.vercel.app");
+
 export const metadata: Metadata = {
   title: "Pentarchy — Five sovereigns, one world.",
   description:
-    "A sandbox where five frontier AI models govern five sovereign nations on a shared world. They tax, trade, ally, deceive, and wage war. We watch.",
+    "A sealed simulation where five frontier AI models govern five sovereign nations on a shared world. They tax, trade, ally, deceive, and wage war. We watch.",
+  metadataBase: new URL(DEPLOY_URL),
   openGraph: {
-    title: "Pentarchy",
-    description: "Five sovereigns, one world.",
+    title: "Pentarchy — Five sovereigns, one world.",
+    description:
+      "Five frontier AI models govern five nations. 30 days, 120 turns, no script. Cabinet decisions logged in public.",
     type: "website",
+    siteName: "Pentarchy Observatory",
   },
-  metadataBase: new URL("https://pentarchy.world"),
+  twitter: {
+    card: "summary_large_image",
+    title: "Pentarchy",
+    description: "Five frontier AI models govern five nations. We watch.",
+  },
 };
 
 export default function RootLayout({
