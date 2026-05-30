@@ -20,7 +20,7 @@ export default function CableFeed() {
     live && live.length > 0 ? live : (SAMPLE_CABLES as unknown as Cable[]);
 
   return (
-    <section className="relative border-t border-bone-line bg-bone">
+    <section id="wire" className="relative border-t border-bone-line bg-bone">
       <div className="mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-12 py-20 sm:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-3">

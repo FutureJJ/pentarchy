@@ -13,14 +13,11 @@ export default function Nav() {
           </span>
         </Link>
         <nav className="flex items-center gap-5 sm:gap-7 mono text-xs uppercase tracking-widest">
-          <Link href="#premise" className="hover:text-brass transition-colors">
-            Premise
-          </Link>
           <Link href="#nations" className="hover:text-brass transition-colors">
-            Nations
+            Cabinet
           </Link>
-          <Link href="#mechanics" className="hidden xs:inline hover:text-brass transition-colors">
-            Mechanics
+          <Link href="#wire" className="hover:text-brass transition-colors">
+            Wire
           </Link>
           <Link
             href="/docs"
