@@ -155,9 +155,8 @@ function Brief({ nation, city, data }: { nation: N; city: C; data: D }) {
       <div className="border border-bone-line p-4 bg-bone-soft/40">
         <div className="label mb-2">Standing</div>
         <p className="text-sm leading-relaxed text-ink-soft">
-          {city.name} is a {data.character} seat under {nation.name}&apos;s{" "}
-          {nation.doctrine.toLowerCase()} doctrine. Its primary industry is{" "}
-          {data.industry.toLowerCase()}.
+          {city.name} is a {data.character} seat of {nation.name}. Its primary
+          industry is {data.industry.toLowerCase()}.
         </p>
       </div>
       <div>
@@ -228,9 +227,9 @@ function Garrison({ nation, data }: { nation: N; data: D }) {
       <div className="border border-bone-line p-4 bg-bone-soft/40">
         <div className="label mb-2">Defensive posture</div>
         <p className="text-sm leading-relaxed text-ink-soft">
-          Fortifications under standing orders of the {nation.doctrine.toLowerCase()}{" "}
-          tradition. Local command answers to {nation.name}&apos;s general staff at{" "}
-          {nation.cities.find((c) => c.capital)?.name}.
+          Local command answers to {nation.name}&apos;s general staff at{" "}
+          {nation.cities.find((c) => c.capital)?.name}. Fortifications follow
+          the steward&apos;s declared military doctrine.
         </p>
       </div>
       <div className="border border-bone-line p-3.5">

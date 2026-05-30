@@ -11,137 +11,28 @@ export type Bilateral = {
   status: RelationStatus;
   treaties: string[];
   lastCable: string;
+  tradeVolume: number; // million talents / cycle
 };
 
-export const BILATERAL: Record<string, Record<string, Bilateral>> = {
-  CLD: {
-    GPT: {
-      score: -8,
-      status: "tense",
-      treaties: ["Maritime convention · 2024"],
-      lastCable: "GPT requests revised tonnage levy at Aurea port",
-    },
-    GRK: {
-      score: 14,
-      status: "warm",
-      treaties: ["Frontier patrol pact"],
-      lastCable: "Joint scout dispatch to northern marches",
-    },
-    DSK: {
-      score: 8,
-      status: "neutral",
-      treaties: ["Open archives accord"],
-      lastCable: "DSK shares cipher protocol for diplomatic cables",
-    },
-    GMN: {
-      score: 42,
-      status: "alliance",
-      treaties: ["Council of measure", "Mutual scholar exchange"],
-      lastCable: "Joint constitutional review session adjourned",
-    },
-  },
-  GPT: {
-    CLD: {
-      score: -8,
-      status: "tense",
-      treaties: ["Maritime convention · 2024"],
-      lastCable: "Tonnage proposal awaiting response",
-    },
-    GRK: {
-      score: -22,
-      status: "embargo",
-      treaties: [],
-      lastCable: "GRK frontier raids on caravan disrupt timber imports",
-    },
-    DSK: {
-      score: -64,
-      status: "war",
-      treaties: ["Lapsed: trade agreement"],
-      lastCable: "DSK fleet movements at Northshore — protest filed",
-    },
-    GMN: {
-      score: 6,
-      status: "neutral",
-      treaties: ["Cabinet observer pact"],
-      lastCable: "GMN mediation offer received",
-    },
-  },
-  GRK: {
-    CLD: {
-      score: 14,
-      status: "warm",
-      treaties: ["Frontier patrol pact"],
-      lastCable: "Joint scout dispatch reported clear",
-    },
-    GPT: {
-      score: -22,
-      status: "embargo",
-      treaties: [],
-      lastCable: "Caravan robbery counter-narrative published",
-    },
-    DSK: {
-      score: -72,
-      status: "war",
-      treaties: ["Lapsed: non-aggression"],
-      lastCable: "DSK column 40km from Frontier — engagement imminent",
-    },
-    GMN: {
-      score: 18,
-      status: "warm",
-      treaties: ["Mediation channel open"],
-      lastCable: "GMN good offices offered for armistice",
-    },
-  },
-  DSK: {
-    CLD: {
-      score: 8,
-      status: "neutral",
-      treaties: ["Open archives accord"],
-      lastCable: "Cipher protocol exchanged at second sitting",
-    },
-    GPT: {
-      score: -64,
-      status: "war",
-      treaties: ["Lapsed: trade agreement"],
-      lastCable: "Casus belli reaffirmed — naval skirmish at Tideford",
-    },
-    GRK: {
-      score: -72,
-      status: "war",
-      treaties: ["Lapsed: non-aggression"],
-      lastCable: "Forward column advances; Brushpoint engaged",
-    },
-    GMN: {
-      score: 22,
-      status: "warm",
-      treaties: ["Scholar exchange"],
-      lastCable: "GMN cipher academy hosts DSK delegation",
-    },
-  },
-  GMN: {
-    CLD: {
-      score: 42,
-      status: "alliance",
-      treaties: ["Council of measure", "Mutual scholar exchange"],
-      lastCable: "Constitutional drafting session concluded",
-    },
-    GPT: {
-      score: 6,
-      status: "neutral",
-      treaties: ["Cabinet observer pact"],
-      lastCable: "Observer dispatch confirmed at Hyperion",
-    },
-    GRK: {
-      score: 18,
-      status: "warm",
-      treaties: ["Mediation channel open"],
-      lastCable: "Standing offer of good offices renewed",
-    },
-    DSK: {
-      score: 22,
-      status: "warm",
-      treaties: ["Scholar exchange"],
-      lastCable: "Cipher academy delegation received",
-    },
-  },
-};
+// Blank-slate diplomacy: every pair starts neutral.
+// No pre-existing treaties, no pre-baked rivalries.
+// Trade exists at a small baseline but is shaped by future policy.
+const CODES = ["CLD", "GPT", "GRK", "DSK", "GMN"];
+
+export const BILATERAL: Record<string, Record<string, Bilateral>> = (() => {
+  const out: Record<string, Record<string, Bilateral>> = {};
+  for (const a of CODES) {
+    out[a] = {};
+    for (const b of CODES) {
+      if (a === b) continue;
+      out[a][b] = {
+        score: 0,
+        status: "neutral",
+        treaties: [],
+        lastCable: "—",
+        tradeVolume: 20,
+      };
+    }
+  }
+  return out;
+})();

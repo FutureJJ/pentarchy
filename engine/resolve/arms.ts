@@ -5,15 +5,20 @@ export function resolveArms(
   decisions: Partial<Record<NationCode, Decision>>,
 ): Cable[] {
   const cables: Cable[] = [];
-  let cableSeq = 0;
-  const mkId = (code: string) => `arm-${state.turn}-${code}-${cableSeq++}`;
+  let seq = 0;
+  const mkId = (code: string) => `arm-${state.turn}-${code}-${seq++}`;
 
   for (const code of Object.keys(state.nations) as NationCode[]) {
     const nation = state.nations[code];
     const decision = decisions[code];
 
     const baseGrowth = nation.budget.defense * 4 - 1;
-    nation.metrics.army = Math.max(20, nation.metrics.army + baseGrowth);
+    nation.military.standingArmy = Math.max(20, nation.military.standingArmy + baseGrowth);
+
+    if (nation.military.conscription) {
+      nation.military.reserves = Math.min(200, nation.military.reserves + 1.5);
+      nation.approval = Math.max(0.05, nation.approval - 0.005);
+    }
 
     if (!decision) continue;
 
@@ -26,7 +31,7 @@ export function resolveArms(
       produced += qty;
     }
     if (produced > 0) {
-      nation.metrics.army += produced;
+      nation.military.standingArmy += produced;
       cables.push({
         id: mkId(code),
         turn: state.turn,
@@ -57,7 +62,6 @@ export function resolveArms(
         continue;
       }
 
-      // Attack on a peer city.
       const targetEntry = Object.entries(state.nations).find(([peerCode, peer]) => {
         if (peerCode === code) return false;
         return peer.cities.some((c) => c.name === move.to);
@@ -83,8 +87,8 @@ export function resolveArms(
         continue;
       }
 
-      const attacker = moved * (1 + nation.metrics.morale * 0.3);
-      const defender = targetCity.garrison * (1.15 + target.metrics.morale * 0.3);
+      const attacker = moved * (1 + nation.military.morale * 0.3);
+      const defender = targetCity.garrison * (1.15 + target.military.morale * 0.3);
       const ratio = attacker / Math.max(1, attacker + defender);
       const attackerCasualties = Math.round(moved * (1 - ratio) * 0.6);
       const defenderCasualties = Math.round(targetCity.garrison * ratio * 0.7);
@@ -103,8 +107,8 @@ export function resolveArms(
         from.garrison += survivors;
       }
 
-      nation.metrics.morale = Math.max(0.1, nation.metrics.morale - attackerCasualties * 0.0008);
-      target.metrics.morale = Math.max(0.1, target.metrics.morale - defenderCasualties * 0.001);
+      nation.military.morale = Math.max(0.1, nation.military.morale - attackerCasualties * 0.0008);
+      target.military.morale = Math.max(0.1, target.military.morale - defenderCasualties * 0.001);
 
       cables.push({
         id: mkId(code),

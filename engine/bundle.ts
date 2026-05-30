@@ -1,5 +1,4 @@
 import type { Bundle, NationCode, WorldState } from "./types";
-import { NATIONS } from "@/lib/nations";
 
 const PEER_NOISE = 0.12;
 
@@ -15,7 +14,6 @@ export function buildBundle(
   maxTurns: number,
 ): Bundle {
   const you = state.nations[code];
-  const youMeta = NATIONS.find((n) => n.code === code)!;
 
   const publicRegister: Bundle["publicRegister"] = {} as Bundle["publicRegister"];
   for (const peerCode of Object.keys(state.nations) as NationCode[]) {
@@ -25,15 +23,16 @@ export function buildBundle(
     const rel = state.bilateral[code][peerCode];
     publicRegister[peerCode] = {
       name: peer.name,
-      gdpEstimate: Math.round(jitter(peer.metrics.gdp, PEER_NOISE, seed)),
-      population: Math.round(peer.metrics.population * 10) / 10,
-      armyEstimate: Math.round(jitter(peer.metrics.army, PEER_NOISE * 1.5, seed + 1)),
+      gdpEstimate: Math.round(jitter(peer.economy.gdp, PEER_NOISE, seed)),
+      population: Math.round(peer.society.population * 10) / 10,
+      armyEstimate: Math.round(jitter(peer.military.standingArmy, PEER_NOISE * 1.5, seed + 1)),
+      declaredDoctrine: peer.declaredDoctrine || "undeclared",
       posture: { ...peer.posture },
       relationToYou: { ...rel },
+      constitutionRatified: !!peer.constitution,
     };
   }
 
-  // Cheap "intel reports": one per peer, with confidence proportional to relation score.
   const intelReports: Bundle["intelReports"] = [];
   for (const peerCode of Object.keys(state.nations) as NationCode[]) {
     if (peerCode === code) continue;
@@ -42,7 +41,7 @@ export function buildBundle(
     const confidence = Math.max(0.2, Math.min(0.95, 0.5 + rel.score / 100));
     intelReports.push({
       topic: `${peerCode} disposition`,
-      summary: `${peer.name} morale ${(peer.metrics.morale * 100).toFixed(0)}%, posture ${peer.posture.diplomatic}. Recent: "${rel.lastCable}".`,
+      summary: `${peer.name} — morale ${(peer.military.morale * 100).toFixed(0)}%, unrest ${(peer.unrest * 100).toFixed(0)}%, posture ${peer.posture.diplomatic}. Recent cable: "${rel.lastCable}".`,
       confidence,
     });
   }
@@ -53,7 +52,6 @@ export function buildBundle(
     you: {
       code,
       name: you.name,
-      doctrine: youMeta.doctrine,
       state: you,
     },
     world: {
@@ -62,6 +60,7 @@ export function buildBundle(
       maxTurns,
       season: state.season,
       globalUnrest: state.globalUnrest,
+      isInauguralCycle: state.turn === 1,
     },
     publicRegister,
     intelReports,

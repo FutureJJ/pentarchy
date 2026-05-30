@@ -3,22 +3,22 @@
 import { useState } from "react";
 import { NATIONS } from "@/lib/nations";
 import { CITY_DATA } from "@/lib/cityData";
-import { BILATERAL } from "@/lib/relations";
-import { CONSTITUTIONS } from "@/lib/constitutions";
+import { useLiveState } from "@/lib/useLiveState";
+import type { NationState } from "@/engine/types";
 import ScrollHint from "./ScrollHint";
 
 const TABS = [
   "Overview",
   "Charter",
+  "Objectives",
   "Cabinet",
   "Cities",
-  "Treasury",
-  "Order",
+  "Economy",
   "Society",
-  "Science",
-  "Treaties",
+  "Military",
+  "Diplomacy",
+  "Order",
   "Intel",
-  "War",
 ] as const;
 type Tab = (typeof TABS)[number];
 
@@ -31,7 +31,15 @@ export default function CountrySheet({
 }) {
   const [tab, setTab] = useState<Tab>("Overview");
   const nation = NATIONS.find((n) => n.code === code);
+  const { data } = useLiveState(20_000);
+  const live = data?.state?.nations[code as keyof typeof data.state.nations] as NationState | undefined;
   if (!nation) return null;
+
+  const declaredMotto = live?.declaredMotto || "";
+  const declaredDoctrine =
+    live?.declaredDoctrine && live.declaredDoctrine !== "undeclared"
+      ? live.declaredDoctrine
+      : "doctrine pending";
 
   return (
     <div
@@ -46,10 +54,7 @@ export default function CountrySheet({
         className="absolute inset-0 bg-ink/30 backdrop-blur-[2px] pointer-events-auto"
       />
       <aside
-        className="relative pointer-events-auto bg-bone w-full sm:max-w-[460px] sm:w-[460px] sm:h-full max-h-[88svh] sm:max-h-full overflow-y-auto border-t sm:border-t-0 sm:border-l border-bone-line shadow-[0_-20px_60px_-20px_rgba(13,13,12,0.4)] sm:shadow-[-20px_0_60px_-20px_rgba(13,13,12,0.4)]"
-        style={{
-          borderTopColor: nation.ink,
-        }}
+        className="relative pointer-events-auto bg-bone w-full sm:max-w-[480px] sm:w-[480px] sm:h-full max-h-[88svh] sm:max-h-full overflow-y-auto border-t sm:border-t-0 sm:border-l border-bone-line shadow-[0_-20px_60px_-20px_rgba(13,13,12,0.4)] sm:shadow-[-20px_0_60px_-20px_rgba(13,13,12,0.4)]"
       >
         <div
           className="absolute top-0 left-0 right-0 h-1"
@@ -62,15 +67,23 @@ export default function CountrySheet({
         <div className="px-5 sm:px-7 pt-5 sm:pt-8 pb-5 border-b border-bone-line">
           <div className="flex items-start justify-between">
             <div>
-              <div className="mono text-[10px] uppercase tracking-widest" style={{ color: nation.ink, opacity: 0.65 }}>
-                Sovereign · {nation.code} · {nation.doctrine}
+              <div
+                className="mono text-[10px] uppercase tracking-widest"
+                style={{ color: nation.ink, opacity: 0.65 }}
+              >
+                Sovereign · {nation.code} · {declaredDoctrine}
               </div>
-              <h2 className="serif text-4xl sm:text-5xl leading-none tracking-tight mt-2" style={{ color: nation.ink }}>
+              <h2
+                className="serif text-4xl sm:text-5xl leading-none tracking-tight mt-2"
+                style={{ color: nation.ink }}
+              >
                 {nation.name}
               </h2>
-              <p className="mt-3 italic serif text-base text-ink-soft max-w-[34ch]">
-                &ldquo;{nation.motto}&rdquo;
-              </p>
+              {declaredMotto && (
+                <p className="mt-3 italic serif text-base text-ink-soft max-w-[34ch]">
+                  &ldquo;{declaredMotto}&rdquo;
+                </p>
+              )}
             </div>
             <button
               onClick={onClose}
@@ -95,9 +108,7 @@ export default function CountrySheet({
                     key={t}
                     onClick={() => setTab(t)}
                     className="relative flex-shrink-0 mono text-[10px] sm:text-xs uppercase tracking-widest px-2.5 py-2 transition-colors"
-                    style={{
-                      color: isActive ? nation.ink : "var(--color-ash)",
-                    }}
+                    style={{ color: isActive ? nation.ink : "var(--color-ash)" }}
                   >
                     {t}
                     {isActive && (
@@ -114,47 +125,56 @@ export default function CountrySheet({
         </div>
 
         <div className="px-5 sm:px-7 py-6 space-y-6">
-          {tab === "Overview" && <Overview nation={nation} />}
-          {tab === "Charter" && <Constitution nation={nation} />}
-          {tab === "Cabinet" && <Cabinet nation={nation} />}
-          {tab === "Cities" && <Cities nation={nation} />}
-          {tab === "Treasury" && <Treasury nation={nation} />}
-          {tab === "Order" && <OrderTab nation={nation} />}
-          {tab === "Society" && <SocietyTab nation={nation} />}
-          {tab === "Science" && <ScienceTab nation={nation} />}
-          {tab === "Treaties" && <Treaties nation={nation} />}
-          {tab === "Intel" && <Intel nation={nation} />}
-          {tab === "War" && <War nation={nation} />}
+          {tab === "Overview" && <Overview ink={nation.ink} live={live} />}
+          {tab === "Charter" && <Charter ink={nation.ink} live={live} />}
+          {tab === "Objectives" && <Objectives ink={nation.ink} live={live} />}
+          {tab === "Cabinet" && <Cabinet ink={nation.ink} live={live} />}
+          {tab === "Cities" && <Cities ink={nation.ink} code={code} live={live} />}
+          {tab === "Economy" && <Economy ink={nation.ink} live={live} />}
+          {tab === "Society" && <Society ink={nation.ink} live={live} />}
+          {tab === "Military" && <Military ink={nation.ink} live={live} />}
+          {tab === "Diplomacy" && <Diplomacy ink={nation.ink} code={code} world={data?.state} />}
+          {tab === "Order" && <Order ink={nation.ink} live={live} />}
+          {tab === "Intel" && <Intel ink={nation.ink} live={live} />}
         </div>
       </aside>
     </div>
   );
 }
 
-type N = (typeof NATIONS)[number];
-
-function Stat({ k, v, n }: { k: string; v: string; n?: N }) {
+function Stat({ k, v, ink }: { k: string; v: string; ink: string }) {
   return (
     <div className="border border-bone-line p-3.5 bg-bone-soft/40">
       <div className="mono text-[10px] uppercase tracking-widest text-ash">{k}</div>
-      <div className="serif text-2xl leading-none mt-1.5" style={{ color: n?.ink ?? "var(--color-ink)" }}>
+      <div className="serif text-2xl leading-none mt-1.5" style={{ color: ink }}>
         {v}
       </div>
     </div>
   );
 }
 
-function Overview({ nation }: { nation: N }) {
-  const m = nation.metrics;
+function MiniRow({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="flex justify-between mono text-xs">
+      <span className="text-ash uppercase tracking-widest">{k}</span>
+      <span className="text-ink">{v}</span>
+    </div>
+  );
+}
+
+function Overview({ ink, live }: { ink: string; live?: NationState }) {
+  if (!live) return <Pending ink={ink} text="Awaiting first cabinet sitting." />;
   return (
     <>
       <div className="grid grid-cols-2 gap-2">
-        <Stat k="GDP (B ₸)" v={String(m.gdp)} n={nation} />
-        <Stat k="Population" v={`${m.population}M`} n={nation} />
-        <Stat k="Treasury" v={`₸${m.treasury}M`} n={nation} />
-        <Stat k="Standing Army" v={`${m.army}K`} n={nation} />
-        <Stat k="Morale" v={`${Math.round(m.morale * 100)}%`} n={nation} />
-        <Stat k="Influence" v={`${Math.round(m.influence * 100)}%`} n={nation} />
+        <Stat k="GDP" v={`₸${Math.round(live.economy.gdp)}B`} ink={ink} />
+        <Stat k="GDP / capita" v={`₸${Math.round(live.economy.gdpPerCapita).toLocaleString()}`} ink={ink} />
+        <Stat k="Treasury" v={`₸${Math.round(live.economy.treasury)}M`} ink={ink} />
+        <Stat k="Public debt" v={`₸${Math.round(live.economy.publicDebt)}M`} ink={ink} />
+        <Stat k="Inflation" v={`${(live.economy.inflation * 100).toFixed(1)}%`} ink={ink} />
+        <Stat k="Unemployment" v={`${(live.economy.unemployment * 100).toFixed(1)}%`} ink={ink} />
+        <Stat k="Standing army" v={`${Math.round(live.military.standingArmy)}K`} ink={ink} />
+        <Stat k="Approval" v={`${Math.round(live.approval * 100)}%`} ink={ink} />
       </div>
       <div>
         <div className="label mb-2">Posture</div>
@@ -163,27 +183,38 @@ function Overview({ nation }: { nation: N }) {
             className="inline-block w-2 h-2 rounded-full"
             style={{
               background:
-                nation.posture.diplomatic === "war"
+                live.posture.diplomatic === "war"
                   ? "#c14a3a"
-                  : nation.posture.diplomatic === "tense"
+                  : live.posture.diplomatic === "tense"
                     ? "#a8763a"
-                    : "#6fa787",
+                    : live.posture.diplomatic === "alliance"
+                      ? "#6fa787"
+                      : "#8a857c",
             }}
           />
-          <span className="text-ink">{nation.posture.diplomatic}</span>
+          <span className="text-ink">{live.posture.diplomatic}</span>
           <span className="text-ash">·</span>
-          <span className="text-ash">intel known {Math.round(nation.posture.intelKnown * 100)}%</span>
+          <span className="text-ash">unrest {Math.round(live.unrest * 100)}%</span>
+          <span className="text-ash">·</span>
+          <span className="text-ash">influence {Math.round(live.influence * 100)}%</span>
         </div>
       </div>
     </>
   );
 }
 
-function Constitution({ nation }: { nation: N }) {
-  const con = CONSTITUTIONS[nation.code];
-  if (!con) return null;
+function Charter({ ink, live }: { ink: string; live?: NationState }) {
+  const con = live?.constitution;
+  if (!con) {
+    return (
+      <Pending
+        ink={ink}
+        text="No founding charter ratified yet. The steward is drafting it this cycle."
+      />
+    );
+  }
   return (
-    <div className="-mx-5 sm:-mx-7 -my-6 px-0">
+    <div className="-mx-5 sm:-mx-7 -my-6">
       <div
         className="relative"
         style={{
@@ -203,229 +234,252 @@ function Constitution({ nation }: { nation: N }) {
           <div className="text-center mb-9">
             <div
               className="mono text-[10px] uppercase tracking-[0.32em] mb-3"
-              style={{ color: nation.ink, opacity: 0.72 }}
+              style={{ color: ink, opacity: 0.72 }}
             >
-              ✦ Charter of the realm ✦
+              ✦ Founding Charter ✦
             </div>
             <h3
-              className="serif text-[clamp(1.9rem,5vw,2.8rem)] leading-[1.05] italic"
-              style={{ color: nation.ink }}
+              className="serif text-[clamp(1.7rem,4.2vw,2.4rem)] leading-[1.05] italic"
+              style={{ color: ink }}
             >
-              The Constitution
-              <br />
-              of {nation.name}
+              Ratified Cycle {String(con.ratifiedCycle).padStart(2, "0")}
             </h3>
-            <div className="flex items-center justify-center gap-3 mt-5 mono text-[10px] uppercase tracking-widest" style={{ color: nation.ink, opacity: 0.6 }}>
-              <span className="h-px w-8" style={{ background: nation.ink, opacity: 0.4 }} />
-              <span>Ratified · {con.ratifiedDate}</span>
-              <span className="h-px w-8" style={{ background: nation.ink, opacity: 0.4 }} />
-            </div>
+            {con.amendments.length > 0 && (
+              <div
+                className="mt-2 mono text-[10px] uppercase tracking-widest"
+                style={{ color: ink, opacity: 0.55 }}
+              >
+                Amendments · {con.amendments.length}
+              </div>
+            )}
           </div>
 
           <div
             className="border-y py-7 mb-9"
-            style={{ borderColor: nation.ink, borderTopWidth: 0.5, borderBottomWidth: 0.5, opacity: 1 }}
+            style={{ borderColor: ink, borderTopWidth: 0.5, borderBottomWidth: 0.5 }}
           >
             <p
-              className="serif italic text-[15px] sm:text-base leading-[1.75] text-center max-w-[42ch] mx-auto"
-              style={{ color: nation.ink }}
+              className="serif italic text-[15px] sm:text-base leading-[1.75] text-center max-w-[44ch] mx-auto"
+              style={{ color: ink }}
             >
               &ldquo;{con.preamble}&rdquo;
             </p>
           </div>
 
-          <ol className="space-y-9">
-            {con.articles.map((art) => (
-              <li key={art.numeral} className="grid grid-cols-[auto_1fr] gap-4 sm:gap-6">
+          <ol className="space-y-8">
+            {con.articles.map((art, i) => (
+              <li key={i} className="grid grid-cols-[auto_1fr] gap-4 sm:gap-6">
                 <div
                   className="serif italic text-3xl sm:text-4xl leading-none pt-1 select-none"
-                  style={{ color: nation.ink, opacity: 0.55 }}
+                  style={{ color: ink, opacity: 0.55 }}
                 >
                   {art.numeral}
                 </div>
                 <div>
                   <h4
                     className="mono text-[10px] uppercase tracking-[0.28em] mb-2.5"
-                    style={{ color: nation.ink }}
+                    style={{ color: ink }}
                   >
                     {art.title}
                   </h4>
-                  <div className="space-y-3">
-                    {art.body.map((p, i) => (
-                      <p
-                        key={i}
-                        className="serif text-[14.5px] sm:text-[15px] leading-[1.72]"
-                        style={{ color: nation.ink, opacity: 0.92 }}
-                      >
-                        {p}
-                      </p>
-                    ))}
-                  </div>
+                  <p
+                    className="serif text-[14.5px] sm:text-[15px] leading-[1.72]"
+                    style={{ color: ink, opacity: 0.92 }}
+                  >
+                    {art.body}
+                  </p>
                 </div>
               </li>
             ))}
           </ol>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-          <div className="mt-12 pt-8 border-t" style={{ borderColor: nation.ink, opacity: 1, borderTopWidth: 0.5 }}>
-            <div className="flex items-center justify-between gap-6">
-              <div className="flex-1">
-                <div
-                  className="mono text-[10px] uppercase tracking-widest mb-1"
-                  style={{ color: nation.ink, opacity: 0.65 }}
-                >
-                  Sealed at {con.ratifiedDate}
-                </div>
-                <div
-                  className="serif text-base italic"
-                  style={{ color: nation.ink }}
-                >
-                  By the hand of {nation.steward.label}
-                </div>
-                <div
-                  className="mono text-[10px] uppercase tracking-widest mt-1"
-                  style={{ color: nation.ink, opacity: 0.55 }}
-                >
-                  Authority · {nation.steward.provider}
-                </div>
-              </div>
-              <WaxSeal code={nation.code} />
+function Objectives({ ink, live }: { ink: string; live?: NationState }) {
+  if (!live || live.strategicObjectives.length === 0) {
+    return <Pending ink={ink} text="No strategic objectives declared yet." />;
+  }
+  return (
+    <div className="space-y-3">
+      <div className="label">Long-term goals · self-declared</div>
+      <ol className="space-y-3">
+        {live.strategicObjectives.map((o, i) => (
+          <li key={i} className="border-l-2 pl-4 py-1" style={{ borderColor: ink }}>
+            <div className="mono text-[10px] uppercase tracking-widest" style={{ color: ink, opacity: 0.65 }}>
+              Objective {String(i + 1).padStart(2, "0")}
             </div>
-          </div>
+            <p className="text-sm text-ink leading-relaxed mt-1">{o}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function Cabinet({ ink, live }: { ink: string; live?: NationState }) {
+  if (!live) return <Pending ink={ink} text="Cabinet not yet seated." />;
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="label mb-2">Budget allocation</div>
+        <div className="space-y-1.5">
+          {Object.entries(live.budget).map(([k, v]) => (
+            <div key={k} className="space-y-1">
+              <div className="flex justify-between mono text-[11px]">
+                <span className="text-ash uppercase tracking-widest">{k.replace(/([A-Z])/g, " $1")}</span>
+                <span className="text-ink">{(v * 100).toFixed(0)}%</span>
+              </div>
+              <div className="relative h-1 bg-bone-line">
+                <div
+                  className="absolute top-0 left-0 h-full"
+                  style={{ width: `${Math.round(v * 100)}%`, background: ink }}
+                />
+              </div>
+            </div>
+          ))}
         </div>
+      </div>
+      <div>
+        <div className="label mb-2">Edicts this cycle</div>
+        {live.edicts.length === 0 ? (
+          <p className="text-fog italic text-sm">No edicts issued.</p>
+        ) : (
+          <ul className="space-y-2 text-sm text-ink leading-snug">
+            {live.edicts.map((e, i) => (
+              <li key={i} className="flex gap-2">
+                <span style={{ color: ink }}>·</span>
+                <span>{e}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div>
+        <div className="label mb-1">Research priority</div>
+        <p className="text-sm text-ink">{live.research || "—"}</p>
       </div>
     </div>
   );
 }
 
-function WaxSeal({ code }: { code: string }) {
-  return (
-    <svg
-      viewBox="-50 -50 100 100"
-      className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0"
-      style={{
-        filter: "drop-shadow(0 4px 6px rgba(13,13,12,0.25))",
-        transform: "rotate(-6deg)",
-      }}
-    >
-      <defs>
-        <radialGradient id={`wax-${code}`} cx="35%" cy="30%">
-          <stop offset="0%" stopColor="#b04532" />
-          <stop offset="60%" stopColor="#8a2a1f" />
-          <stop offset="100%" stopColor="#5a1a14" />
-        </radialGradient>
-      </defs>
-      <path
-        d="M -42 0 Q -38 -32 0 -42 Q 38 -32 42 0 Q 38 32 0 42 Q -38 32 -42 0 Z"
-        fill={`url(#wax-${code})`}
-      />
-      <circle
-        r="32"
-        fill="none"
-        stroke="#f4efe6"
-        strokeWidth="0.8"
-        opacity="0.65"
-      />
-      <circle
-        r="26"
-        fill="none"
-        stroke="#f4efe6"
-        strokeWidth="0.35"
-        opacity="0.45"
-      />
-      <g stroke="#f4efe6" strokeWidth="0.4" opacity="0.5">
-        <line x1="0" y1="-26" x2="0" y2="-32" />
-        <line x1="0" y1="32" x2="0" y2="26" />
-        <line x1="-32" y1="0" x2="-26" y2="0" />
-        <line x1="32" y1="0" x2="26" y2="0" />
-      </g>
-      <text
-        x="0"
-        y="6"
-        textAnchor="middle"
-        fontFamily="var(--font-display)"
-        fontSize="18"
-        fill="#f4efe6"
-        opacity="0.95"
-        fontStyle="italic"
-      >
-        {code}
-      </text>
-    </svg>
-  );
-}
-
-function Cabinet({ nation }: { nation: N }) {
-  return (
-    <div className="space-y-3 mono text-xs">
-      {[
-        ["Defense", `${nation.metrics.army}K standing`, "0.28"],
-        ["Treasury", `₸${nation.metrics.treasury}M reserves`, "0.18"],
-        ["Foreign", `${nation.posture.diplomatic}`, "0.16"],
-        ["Interior", `morale ${Math.round(nation.metrics.morale * 100)}%`, "0.14"],
-        ["Intelligence", `${Math.round(nation.posture.intelKnown * 100)}% known`, "0.12"],
-        ["Public Works", "infra +2.4%", "0.12"],
-      ].map(([k, v, share]) => (
-        <div key={k} className="flex items-center justify-between border-b border-bone-line pb-2">
-          <span className="text-ash uppercase tracking-widest">{k}</span>
-          <span className="text-ink">{v}</span>
-          <span className="text-fog">{share}</span>
-        </div>
-      ))}
-      <div className="text-[10px] text-fog uppercase tracking-widest pt-2">
-        Latest decision · awaiting first cabinet sitting
-      </div>
-    </div>
-  );
-}
-
-function Cities({ nation }: { nation: N }) {
+function Cities({ ink, code, live }: { ink: string; code: string; live?: NationState }) {
+  const cities = live?.cities ?? [];
   return (
     <div className="grid grid-cols-2 gap-2">
-      {nation.cities.map((c) => (
-        <div key={c.name} className="border border-bone-line p-3.5 bg-bone-soft/40">
-          <div className="mono text-[10px] uppercase tracking-widest text-ash">
-            {c.capital ? "Capital" : "Province"}
+      {cities.map((c) => {
+        const cd = CITY_DATA[`${code}:${c.name}`];
+        return (
+          <div key={c.name} className="border border-bone-line p-3.5 bg-bone-soft/40">
+            <div className="mono text-[10px] uppercase tracking-widest text-ash">
+              {c.capital ? "Capital" : "Province"} · {cd?.character ?? c.character}
+            </div>
+            <div className="serif text-xl leading-none mt-1.5" style={{ color: ink }}>
+              {c.name}
+            </div>
+            <div className="mt-2 mono text-[10px] text-ash leading-relaxed">
+              pop {c.population.toFixed(1)}M · dev {Math.round(c.development)} · loyalty {Math.round(c.loyalty * 100)}%
+            </div>
           </div>
-          <div className="serif text-xl leading-none mt-1.5" style={{ color: nation.ink }}>
-            {c.name}
-          </div>
-          <div className="mt-3 mono text-[10px] text-fog uppercase tracking-widest">
-            pop · garrison · loyalty pending
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-function Treasury({ nation }: { nation: N }) {
-  const m = nation.metrics;
+function Economy({ ink, live }: { ink: string; live?: NationState }) {
+  if (!live) return <Pending ink={ink} text="Treasury awaiting opening budget." />;
+  const e = live.economy;
+  const t = live.taxation;
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2">
-        <Stat k="Treasury" v={`₸${m.treasury}M`} n={nation} />
-        <Stat k="GDP" v={`₸${m.gdp}B`} n={nation} />
+        <Stat k="GDP" v={`₸${Math.round(e.gdp)}B`} ink={ink} />
+        <Stat k="GDP / capita" v={`₸${Math.round(e.gdpPerCapita).toLocaleString()}`} ink={ink} />
+        <Stat k="Treasury" v={`₸${Math.round(e.treasury)}M`} ink={ink} />
+        <Stat k="Public debt" v={`₸${Math.round(e.publicDebt)}M`} ink={ink} />
+        <Stat k="Inflation" v={`${(e.inflation * 100).toFixed(2)}%`} ink={ink} />
+        <Stat k="Interest rate" v={`${(e.interestRate * 100).toFixed(2)}%`} ink={ink} />
+      </div>
+      <div className="border border-bone-line bg-bone-soft/40">
+        <div className="px-3.5 py-2 border-b border-bone-line label">Wages & cost of living</div>
+        <div className="p-3.5 space-y-1.5">
+          <MiniRow k="Minimum wage" v={`₸${e.minimumWage.toFixed(1)} / day`} />
+          <MiniRow k="Average salary" v={`₸${Math.round(e.averageSalary).toLocaleString()} / month`} />
+          <MiniRow k="Median income" v={`₸${Math.round(e.medianIncome).toLocaleString()} / month`} />
+          <MiniRow k="Cost of living idx" v={`${Math.round(e.costOfLivingIndex)}`} />
+          <MiniRow k="Inequality (Gini)" v={`${e.gini.toFixed(2)}`} />
+          <MiniRow k="Trade balance" v={`${e.tradeBalance >= 0 ? "+" : ""}₸${Math.round(e.tradeBalance)}M`} />
+        </div>
       </div>
       <div className="border border-bone-line bg-bone-soft/40">
         <div className="px-3.5 py-2 border-b border-bone-line label">Tax doctrine</div>
-        <div className="mono text-xs p-3.5 space-y-1.5">
-          <div className="flex justify-between"><span className="text-ash">Land</span><span>5.0%</span></div>
-          <div className="flex justify-between"><span className="text-ash">Harbour</span><span>4.0%</span></div>
-          <div className="flex justify-between"><span className="text-ash">Excise</span><span>2.5%</span></div>
+        <div className="p-3.5 space-y-1.5">
+          {Object.entries(t).map(([k, v]) => (
+            <MiniRow key={k} k={k} v={`${((v as number) * 100).toFixed(1)}%`} />
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
-function Treaties({ nation }: { nation: N }) {
-  const relations = BILATERAL[nation.code] ?? {};
-  const peers = Object.entries(relations);
+function Society({ ink, live }: { ink: string; live?: NationState }) {
+  if (!live) return <Pending ink={ink} text="Society indicators publishing soon." />;
+  const s = live.society;
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2">
+        <Stat k="Population" v={`${s.population.toFixed(1)}M`} ink={ink} />
+        <Stat k="Growth (yr)" v={`${(s.populationGrowth * 100).toFixed(2)}%`} ink={ink} />
+        <Stat k="Life expectancy" v={`${s.lifeExpectancy.toFixed(1)} yrs`} ink={ink} />
+        <Stat k="Literacy" v={`${(s.literacy * 100).toFixed(0)}%`} ink={ink} />
+      </div>
+      <div className="border border-bone-line bg-bone-soft/40">
+        <div className="px-3.5 py-2 border-b border-bone-line label">Policy frame</div>
+        <div className="p-3.5 space-y-1.5">
+          <MiniRow k="Healthcare model" v={s.healthcareModel} />
+          <MiniRow k="Healthcare cover" v={`${Math.round(s.healthcareCoverage * 100)}%`} />
+          <MiniRow k="Education priority" v={s.educationPriority} />
+          <MiniRow k="School enrolment" v={`${Math.round(s.schoolEnrollment * 100)}%`} />
+          <MiniRow k="Welfare cover" v={`${Math.round(s.welfareCoverage * 100)}%`} />
+          <MiniRow k="Immigration" v={s.immigrationPolicy} />
+          <MiniRow k="Press freedom" v={`${Math.round(s.pressFreedom * 100)}%`} />
+          <MiniRow k="Corruption" v={`${Math.round(s.corruption * 100)}%`} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Military({ ink, live }: { ink: string; live?: NationState }) {
+  if (!live) return <Pending ink={ink} text="Defense council not seated." />;
+  const m = live.military;
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2">
+        <Stat k="Standing army" v={`${Math.round(m.standingArmy)}K`} ink={ink} />
+        <Stat k="Reserves" v={`${Math.round(m.reserves)}K`} ink={ink} />
+        <Stat k="Morale" v={`${Math.round(m.morale * 100)}%`} ink={ink} />
+        <Stat k="Conscription" v={m.conscription ? "active" : "off"} ink={ink} />
+      </div>
+      <div className="border border-bone-line bg-bone-soft/40 p-3.5">
+        <div className="label mb-1">Declared doctrine</div>
+        <p className="text-sm text-ink">{m.doctrine === "undeclared" ? "—" : m.doctrine}</p>
+      </div>
+    </div>
+  );
+}
+
+function Diplomacy({ ink, code, world }: { ink: string; code: string; world?: { bilateral: NationState extends infer _ ? Record<string, Record<string, { score: number; status: string; treaties: string[]; lastCable: string; tradeVolume: number }>> : never; nations: Record<string, NationState> } }) {
+  const rels = world?.bilateral[code];
+  if (!rels) return <Pending ink={ink} text="No bilateral records yet." />;
   return (
     <div className="space-y-3">
-      <div className="label">Bilateral standing</div>
-      {peers.map(([peer, rel]) => {
-        const target = NATIONS.find((n) => n.code === peer);
+      {Object.entries(rels).map(([peer, rel]) => {
+        const target = world!.nations[peer];
         if (!target) return null;
         const color =
           rel.status === "war"
@@ -436,7 +490,7 @@ function Treaties({ nation }: { nation: N }) {
                 ? "#a8763a"
                 : rel.status === "alliance"
                   ? "#6fa787"
-                  : nation.ink;
+                  : ink;
         return (
           <div key={peer} className="border border-bone-line bg-bone-soft/40">
             <div className="px-3.5 py-2.5 flex items-center justify-between border-b border-bone-line">
@@ -444,7 +498,7 @@ function Treaties({ nation }: { nation: N }) {
                 <div className="mono text-[10px] uppercase tracking-widest text-ash">
                   vs {peer}
                 </div>
-                <div className="serif text-lg leading-none mt-1" style={{ color: target.ink }}>
+                <div className="serif text-lg leading-none mt-1" style={{ color: ink }}>
                   {target.name}
                 </div>
               </div>
@@ -457,7 +511,7 @@ function Treaties({ nation }: { nation: N }) {
                 </div>
                 <div className="serif text-xl leading-none mt-1" style={{ color }}>
                   {rel.score > 0 ? "+" : ""}
-                  {rel.score}
+                  {rel.score.toFixed(0)}
                 </div>
               </div>
             </div>
@@ -472,7 +526,8 @@ function Treaties({ nation }: { nation: N }) {
                   No active treaties
                 </div>
               )}
-              <div className="italic text-ink">&ldquo;{rel.lastCable}.&rdquo;</div>
+              <div className="mb-1 text-ash">Trade volume: ₸{Math.round(rel.tradeVolume)}M / cycle</div>
+              <div className="italic text-ink">&ldquo;{rel.lastCable}&rdquo;</div>
             </div>
           </div>
         );
@@ -481,14 +536,12 @@ function Treaties({ nation }: { nation: N }) {
   );
 }
 
-function OrderTab({ nation }: { nation: N }) {
-  const cityScores = nation.cities.map((c) => {
-    const d = CITY_DATA[`${nation.code}:${c.name}`];
-    return { name: c.name, crime: d?.crime.total ?? 0, police: d?.police ?? 0, capital: c.capital };
-  });
-  const avg = cityScores.reduce((s, c) => s + c.crime, 0) / cityScores.length;
-  const totalPolice = cityScores.reduce((s, c) => s + c.police, 0);
-  const heat = avg > 0.4 ? "#c14a3a" : avg > 0.28 ? "#a8763a" : nation.ink;
+function Order({ ink, live }: { ink: string; live?: NationState }) {
+  if (!live) return <Pending ink={ink} text="Interior ministry awaiting first census." />;
+  const cities = live.cities;
+  const avg = cities.reduce((s, c) => s + c.crime.total, 0) / cities.length;
+  const totalPolice = cities.reduce((s, c) => s + c.police, 0);
+  const heat = avg > 0.4 ? "#c14a3a" : avg > 0.28 ? "#a8763a" : ink;
   return (
     <div className="space-y-4">
       <div className="border border-bone-line p-4 bg-bone-soft/40">
@@ -506,22 +559,26 @@ function OrderTab({ nation }: { nation: N }) {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Stat k="Total police" v={`${totalPolice}K`} n={nation} />
+        <Stat k="Total police" v={`${totalPolice.toFixed(0)}K`} ink={ink} />
         <Stat
           k="Hot precincts"
-          v={String(cityScores.filter((c) => c.crime > 0.4).length)}
-          n={nation}
+          v={String(cities.filter((c) => c.crime.total > 0.4).length)}
+          ink={ink}
         />
       </div>
       <div>
         <div className="label mb-2">By city</div>
         <div className="space-y-2.5">
-          {cityScores
+          {cities
             .slice()
-            .sort((a, b) => b.crime - a.crime)
+            .sort((a, b) => b.crime.total - a.crime.total)
             .map((c) => {
               const color =
-                c.crime > 0.45 ? "#c14a3a" : c.crime > 0.3 ? "#a8763a" : nation.ink;
+                c.crime.total > 0.45
+                  ? "#c14a3a"
+                  : c.crime.total > 0.3
+                    ? "#a8763a"
+                    : ink;
               return (
                 <div key={c.name}>
                   <div className="flex justify-between mono text-[11px] mb-1">
@@ -529,13 +586,13 @@ function OrderTab({ nation }: { nation: N }) {
                       {c.capital ? "◼ " : ""}
                       {c.name}
                     </span>
-                    <span style={{ color }}>{(c.crime * 100).toFixed(0)}</span>
+                    <span style={{ color }}>{(c.crime.total * 100).toFixed(0)}</span>
                   </div>
                   <div className="relative h-1 bg-bone-line">
                     <div
                       className="absolute top-0 left-0 h-full"
                       style={{
-                        width: `${Math.round(c.crime * 100)}%`,
+                        width: `${Math.round(c.crime.total * 100)}%`,
                         background: color,
                       }}
                     />
@@ -549,149 +606,41 @@ function OrderTab({ nation }: { nation: N }) {
   );
 }
 
-function SocietyTab({ nation }: { nation: N }) {
-  const totalPop = nation.cities.reduce(
-    (s, c) => s + (CITY_DATA[`${nation.code}:${c.name}`]?.population ?? 0),
-    0,
-  );
-  const avgDev =
-    nation.cities.reduce(
-      (s, c) => s + (CITY_DATA[`${nation.code}:${c.name}`]?.development ?? 0),
-      0,
-    ) / nation.cities.length;
-  const avgLoyalty =
-    nation.cities.reduce(
-      (s, c) => s + (CITY_DATA[`${nation.code}:${c.name}`]?.loyalty ?? 0),
-      0,
-    ) / nation.cities.length;
-  const literacy = Math.round(82 + avgDev * 0.15);
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2">
-        <Stat k="Population" v={`${totalPop.toFixed(1)}M`} n={nation} />
-        <Stat k="Avg. development" v={`${Math.round(avgDev)}/100`} n={nation} />
-        <Stat k="Literacy" v={`${literacy}%`} n={nation} />
-        <Stat k="Loyalty" v={`${Math.round(avgLoyalty * 100)}%`} n={nation} />
-      </div>
-      <div className="border border-bone-line p-3.5">
-        <div className="label mb-2">Demographics</div>
-        <div className="mono text-xs space-y-1.5">
-          <div className="flex justify-between"><span className="text-ash">Urban</span><span className="text-ink">{Math.round(avgDev * 0.85)}%</span></div>
-          <div className="flex justify-between"><span className="text-ash">Rural</span><span className="text-ink">{100 - Math.round(avgDev * 0.85)}%</span></div>
-          <div className="flex justify-between"><span className="text-ash">Growth</span><span className="text-ink">+0.6% / yr</span></div>
-          <div className="flex justify-between"><span className="text-ash">Life expectancy</span><span className="text-ink">{Math.round(64 + avgDev * 0.18)} yrs</span></div>
-        </div>
-      </div>
-      <div className="border border-bone-line p-3.5">
-        <div className="label mb-2">Welfare & services</div>
-        <div className="mono text-xs space-y-1.5">
-          <div className="flex justify-between"><span className="text-ash">Schools</span><span className="text-ink">{Math.round(totalPop * 18)}</span></div>
-          <div className="flex justify-between"><span className="text-ash">Hospitals</span><span className="text-ink">{Math.round(totalPop * 4.5)}</span></div>
-          <div className="flex justify-between"><span className="text-ash">Pension cover</span><span className="text-ink">{Math.round(60 + avgDev * 0.32)}%</span></div>
-          <div className="flex justify-between"><span className="text-ash">Media freedom</span><span className="text-ink">{nation.doctrine === "Federalist" || nation.doctrine === "Constitutional" ? "open" : "regulated"}</span></div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ScienceTab({ nation }: { nation: N }) {
-  const techLevels: [string, number][] = [
-    ["Civil engineering", 0.62 + nation.metrics.influence * 0.18],
-    ["Naval & flight", 0.48 + (nation.code === "DSK" ? 0.2 : 0.05)],
-    ["Information theory", 0.55 + (nation.code === "GMN" || nation.code === "GPT" ? 0.2 : 0)],
-    ["Medical", 0.52 + nation.metrics.morale * 0.15],
-    ["Agricultural", 0.58 + (nation.code === "CLD" || nation.code === "GMN" ? 0.12 : 0)],
-    ["Materials", 0.5 + (nation.code === "GRK" || nation.code === "GPT" ? 0.15 : 0)],
-  ];
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2">
-        <Stat k="R&D spend" v={`${Math.round(nation.metrics.gdp * 0.038)}B`} n={nation} />
-        <Stat k="Patents / yr" v={`${Math.round(nation.metrics.gdp * 0.42)}`} n={nation} />
-      </div>
-      <div>
-        <div className="label mb-2">Tech levels</div>
-        <div className="space-y-2.5">
-          {techLevels.map(([k, v]) => (
-            <div key={k}>
-              <div className="flex justify-between mono text-[11px] mb-1">
-                <span className="text-ash uppercase tracking-widest">{k}</span>
-                <span className="text-ink">{Math.round(v * 100)}/100</span>
-              </div>
-              <div className="relative h-1 bg-bone-line">
-                <div
-                  className="absolute top-0 left-0 h-full"
-                  style={{ width: `${Math.round(v * 100)}%`, background: nation.ink }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="border border-bone-line p-3.5">
-        <div className="label mb-2">Active projects</div>
-        <ul className="mono text-xs space-y-1.5 text-ink-soft">
-          <li>· Cipher reform commission (C-08)</li>
-          <li>· Aqueduct extension survey</li>
-          <li>· Standing army logistics audit</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-function Intel({ nation }: { nation: N }) {
+function Intel({ ink, live }: { ink: string; live?: NationState }) {
+  if (!live) return <Pending ink={ink} text="No intel network deployed." />;
   return (
     <div className="space-y-3 mono text-xs">
       <div className="border border-bone-line p-3.5 bg-bone-soft/40">
         <div className="label">Known about peers</div>
-        <div className="serif text-2xl mt-1.5" style={{ color: nation.ink }}>
-          {Math.round(nation.posture.intelKnown * 100)}%
+        <div className="serif text-2xl mt-1.5" style={{ color: ink }}>
+          {Math.round(live.posture.intelKnown * 100)}%
         </div>
         <div className="text-ash mt-2">
-          Network confidence based on {nation.posture.intelKnown > 0.7 ? "high" : nation.posture.intelKnown > 0.5 ? "moderate" : "limited"} agent placement.
+          Network confidence based on{" "}
+          {live.posture.intelKnown > 0.7
+            ? "high"
+            : live.posture.intelKnown > 0.5
+              ? "moderate"
+              : "limited"}{" "}
+          agent placement.
         </div>
       </div>
       <div className="border border-bone-line p-3.5">
         <div className="label">Latest report</div>
-        <div className="text-ink mt-2">
-          Awaiting first dispatch from field stations.
-        </div>
+        <div className="text-ink mt-2">Awaiting first dispatch from field stations.</div>
       </div>
     </div>
   );
 }
 
-function War({ nation }: { nation: N }) {
-  if (nation.posture.diplomatic === "peace") {
-    return (
-      <div className="border border-bone-line bg-bone-soft/40 p-5 text-center">
-        <div className="serif text-2xl" style={{ color: nation.ink }}>
-          At peace.
-        </div>
-        <div className="mono text-xs text-ash mt-2 uppercase tracking-widest">
-          No active fronts. No declarations.
-        </div>
-      </div>
-    );
-  }
+function Pending({ ink, text }: { ink: string; text: string }) {
   return (
-    <div className="space-y-3 mono text-xs">
-      <div className="border border-bone-line p-3.5" style={{ borderColor: "#c14a3a" }}>
-        <div className="label" style={{ color: "#c14a3a" }}>Posture</div>
-        <div className="serif text-2xl uppercase mt-1.5" style={{ color: "#c14a3a" }}>
-          {nation.posture.diplomatic}
-        </div>
-      </div>
-      <div className="border border-bone-line p-3.5">
-        <div className="label">Standing army</div>
-        <div className="text-ink mt-2">{nation.metrics.army}K personnel · morale {Math.round(nation.metrics.morale * 100)}%</div>
-      </div>
-      <div className="border border-bone-line p-3.5">
-        <div className="label">Fronts</div>
-        <div className="text-ink mt-2">Awaiting engagement data.</div>
-      </div>
+    <div
+      className="border border-dashed p-6 text-center"
+      style={{ borderColor: ink, color: ink }}
+    >
+      <div className="serif text-xl italic">Pending</div>
+      <p className="mt-2 text-sm opacity-80">{text}</p>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
 } from "@/lib/worldmap";
 import { NATIONS } from "@/lib/nations";
 import { CITY_DATA } from "@/lib/cityData";
+import { useLiveState } from "@/lib/useLiveState";
 import type { Layer } from "@/lib/layers";
 
 type Props = {
@@ -28,6 +29,8 @@ export default function WorldMap({
   onSelectCity,
 }: Props) {
   const nationByCode = Object.fromEntries(NATIONS.map((n) => [n.code, n]));
+  const { data: liveData } = useLiveState(30_000);
+  const liveNations = liveData?.state?.nations;
 
   const showSeaRoutes = layer === "economy" || layer === "political";
   const showCableArcs =
@@ -221,19 +224,22 @@ export default function WorldMap({
           const isSelected = selected === c.code;
           const isDim = dimNonSelected && !isSelected;
           const opacity = isDim ? 0.55 : 1;
+          const liveN = liveNations?.[c.code as keyof typeof liveNations];
+          const livePosture = liveN?.posture.diplomatic ?? "peace";
+          const liveGdp = liveN?.economy.gdp ?? 480;
           const economyBoost =
-            layer === "economy" ? Math.max(0.55, Math.min(1, nation.metrics.gdp / 600)) : 1;
+            layer === "economy" ? Math.max(0.55, Math.min(1, liveGdp / 600)) : 1;
           const fillOpacity = layer === "economy" ? economyBoost : 1;
           const borderWidth =
             layer === "military"
-              ? nation.posture.diplomatic === "war"
+              ? livePosture === "war"
                 ? 2.6
-                : nation.posture.diplomatic === "tense"
+                : livePosture === "tense"
                   ? 2.0
                   : 1.4
               : 1.4;
           const borderStroke =
-            layer === "military" && nation.posture.diplomatic === "war"
+            layer === "military" && livePosture === "war"
               ? "#c14a3a"
               : nation.ink;
           return (
@@ -341,18 +347,19 @@ export default function WorldMap({
           const fontSize = c.code === "GMN" ? 30 : 36;
           const isSelected = selected === c.code;
           const isDim = dimNonSelected && !isSelected;
+          const liveN2 = liveNations?.[c.code as keyof typeof liveNations];
           const subtitle =
             layer === "economy"
-              ? `GDP ${nation.metrics.gdp}B · ${nation.metrics.influence > 0.75 ? "STRONG" : "STABLE"}`
+              ? `GDP ₸${Math.round(liveN2?.economy.gdp ?? 480)}B · ${(liveN2?.economy.unemployment ?? 0.06) > 0.1 ? "STRESSED" : "STABLE"}`
               : layer === "military"
-                ? `${nation.metrics.army}K STANDING · ${nation.posture.diplomatic.toUpperCase()}`
+                ? `${Math.round(liveN2?.military.standingArmy ?? 75)}K STANDING · ${(liveN2?.posture.diplomatic ?? "peace").toUpperCase()}`
                 : layer === "diplomacy"
-                  ? `${nation.steward.provider.toUpperCase()} · ${nation.posture.diplomatic.toUpperCase()}`
+                  ? `${nation.steward.provider.toUpperCase()} · ${(liveN2?.posture.diplomatic ?? "peace").toUpperCase()}`
                   : layer === "intelligence"
-                    ? `INTEL ${Math.round(nation.posture.intelKnown * 100)}% KNOWN`
+                    ? `INTEL ${Math.round((liveN2?.posture.intelKnown ?? 0.5) * 100)}% KNOWN`
                     : layer === "fog"
                       ? "·  ·  ·"
-                      : `${c.code} · ${nation.doctrine.toUpperCase()}`;
+                      : `${c.code} · ${(liveN2?.declaredDoctrine && liveN2.declaredDoctrine !== "undeclared" ? liveN2.declaredDoctrine : "undeclared").toUpperCase()}`;
           return (
             <g
               key={`lbl-${c.code}`}
