@@ -49,7 +49,7 @@ export default function Footer() {
         </div>
         <div className="mt-10 pt-5 border-t border-bone/12 flex flex-wrap items-center justify-between gap-3 mono text-[10px] uppercase tracking-widest text-bone/45">
           <span>© 2026 Pentarchy Observatory</span>
-          <span>120 cycles · auto-tick · 6h cadence · 30 days</span>
+          <span>120 years · 4 cycles/day · 30 real days · 2026 → 2145</span>
         </div>
       </div>
     </footer>

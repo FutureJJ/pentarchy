@@ -11,7 +11,6 @@ export function resolveClimate(state: WorldState): Cable[] {
   const mkId = (code: string) => `cli-${state.turn}-${code}-${seq++}`;
 
   const codes = Object.keys(state.nations) as NationCode[];
-  const seasonModifier = state.season === "winter" ? -0.4 : state.season === "summer" ? 0.2 : 0;
 
   for (const code of codes) {
     const nation = state.nations[code];
@@ -23,20 +22,21 @@ export function resolveClimate(state: WorldState): Cable[] {
     const educationSpend = nation.budget.education;
     const welfareSpend = nation.budget.welfare;
 
+    // Annual life expectancy drift — slow but compounding over a century
     nation.society.lifeExpectancy = Math.max(
       55,
       Math.min(
-        90,
+        92,
         nation.society.lifeExpectancy +
-          (healthcareSpend - 0.12) * 0.18 +
-          (nation.society.healthcareModel === "universal" ? 0.025 : 0),
+          (healthcareSpend - 0.12) * 0.6 +
+          (nation.society.healthcareModel === "universal" ? 0.15 : 0),
       ),
     );
     nation.society.literacy = Math.max(
       0.4,
       Math.min(
         0.99,
-        nation.society.literacy + (educationSpend - 0.12) * 0.012,
+        nation.society.literacy + (educationSpend - 0.12) * 0.05,
       ),
     );
     nation.society.healthcareCoverage = Math.max(
@@ -44,20 +44,20 @@ export function resolveClimate(state: WorldState): Cable[] {
       Math.min(
         1,
         nation.society.healthcareCoverage +
-          (healthcareSpend - 0.12) * 0.08 +
-          (nation.society.healthcareModel === "universal" ? 0.02 : 0),
+          (healthcareSpend - 0.12) * 0.3 +
+          (nation.society.healthcareModel === "universal" ? 0.04 : 0),
       ),
     );
     nation.society.schoolEnrollment = Math.max(
       0.4,
       Math.min(
         1,
-        nation.society.schoolEnrollment + (educationSpend - 0.12) * 0.05,
+        nation.society.schoolEnrollment + (educationSpend - 0.12) * 0.18,
       ),
     );
 
-    // Population growth applied each cycle
-    nation.society.population = nation.society.population * (1 + nation.society.populationGrowth / 12);
+    // Annual population growth
+    nation.society.population = nation.society.population * (1 + nation.society.populationGrowth);
 
     // Welfare moderates unrest
     nation.unrest = Math.max(
@@ -72,28 +72,28 @@ export function resolveClimate(state: WorldState): Cable[] {
       ),
     );
 
-    // Harvest events
-    if (harvestRoll > 0.78 - seasonModifier * 0.05) {
-      nation.economy.gdp *= 1.004;
-      nation.approval = Math.min(0.98, nation.approval + 0.008);
+    // Annual harvest / disaster events
+    if (harvestRoll > 0.78) {
+      nation.economy.gdp *= 1.012;
+      nation.approval = Math.min(0.98, nation.approval + 0.02);
       cables.push({
         id: mkId(code),
         turn: state.turn,
         priority: "routine",
         from: code,
         category: "ceremony",
-        body: `${nation.name} reports a bountiful ${state.season} season — exchequer receives surplus.`,
+        body: `${nation.name} closes year ${state.year} with strong harvest and trade surplus.`,
       });
-    } else if (harvestRoll < 0.12 + (state.season === "winter" ? 0.08 : 0)) {
-      nation.economy.gdp *= 0.992;
-      nation.approval = Math.max(0.05, nation.approval - 0.012);
+    } else if (harvestRoll < 0.12) {
+      nation.economy.gdp *= 0.97;
+      nation.approval = Math.max(0.05, nation.approval - 0.03);
       cables.push({
         id: mkId(code),
         turn: state.turn,
         priority: "elevated",
         from: code,
         category: "order",
-        body: `Drought reported in ${nation.cities[Math.floor(roll * nation.cities.length)].name} — relief committee convened.`,
+        body: `Drought year reported in ${nation.cities[Math.floor(roll * nation.cities.length)].name} — relief committee convened.`,
       });
     }
 

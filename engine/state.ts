@@ -9,6 +9,7 @@ import type {
   NationState,
   WorldState,
 } from "./types";
+import { yearOf } from "./types";
 
 export const NATION_CODES: NationCode[] = ["CLD", "GPT", "GRK", "DSK", "GMN"];
 
@@ -147,16 +148,11 @@ export function initialState(cycle = 0): WorldState {
   return {
     cycle,
     turn: 0,
-    season: "spring",
+    year: yearOf(0),
     startedAt,
     globalUnrest: 0.15,
     nations,
     bilateral,
     recentCables,
   };
-}
-
-export function seasonForTurn(turn: number): WorldState["season"] {
-  const seasons: WorldState["season"][] = ["spring", "summer", "autumn", "winter"];
-  return seasons[Math.floor(turn / 3) % 4];
 }

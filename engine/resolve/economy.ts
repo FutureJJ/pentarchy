@@ -67,34 +67,35 @@ export function resolveEconomy(
       t.income * 0.45 + t.corporate * 0.25 + t.land * 0.10 + t.harbor * 0.08 +
       t.excise * 0.07 + t.wealth * 0.05;
 
-    // Tax revenue
-    const revenue = e.gdp * 1000 * taxBurden * 0.085; // million talents
+    // Annual tax revenue
+    const revenue = e.gdp * 1000 * taxBurden * 0.32; // million talents per year
     e.treasury += revenue;
 
-    // Debt service
-    const debtService = e.publicDebt * e.interestRate / 4; // quarterly-ish
+    // Annual debt service
+    const debtService = e.publicDebt * e.interestRate;
     e.treasury -= debtService;
     if (e.treasury < 0) {
       e.publicDebt += -e.treasury;
       e.treasury = 0;
     }
 
-    // GDP growth model
-    const minWageStress = Math.max(0, (e.minimumWage - 12) * 0.002); // hurts above 12 t/day
-    const taxDrag = Math.max(0, taxBurden - 0.18) * 0.07;
-    const investBoost = nation.budget.publicWorks * 0.014 + nation.budget.education * 0.008;
-    const baseGrowth = 0.0045;
+    // Annual GDP growth model (real-world plausible 0-6%)
+    const minWageStress = Math.max(0, (e.minimumWage - 12) * 0.005); // hurts above 12 t/day
+    const taxDrag = Math.max(0, taxBurden - 0.22) * 0.22;
+    const investBoost = nation.budget.publicWorks * 0.05 + nation.budget.education * 0.03;
+    const baseGrowth = 0.022; // 2.2% baseline annual
     const growth = baseGrowth + investBoost - taxDrag - minWageStress;
     e.gdp = Math.max(60, e.gdp * (1 + growth));
     e.gdpPerCapita = (e.gdp * 1000) / nation.society.population;
 
-    // Inflation drift
-    const debtInflation = Math.max(0, (e.publicDebt - 200) * 0.00004);
-    const rateAnchor = (e.interestRate - 0.04) * -0.4; // higher rate cools inflation
-    e.inflation = Math.max(-0.01, Math.min(0.4, e.inflation + debtInflation + rateAnchor + (Math.random() - 0.5) * 0.002));
+    // Annual inflation drift
+    const debtInflation = Math.max(0, (e.publicDebt - 200) * 0.0002);
+    const rateAnchor = (e.interestRate - 0.04) * -1.2; // higher rate cools inflation
+    const stochastic = (Math.random() - 0.5) * 0.012;
+    e.inflation = Math.max(-0.02, Math.min(0.5, e.inflation + debtInflation + rateAnchor + stochastic));
 
-    // Unemployment: min wage + tax burden + economic confidence
-    const employmentDrift = minWageStress * 0.6 + taxDrag * 0.3 - investBoost * 0.5;
+    // Unemployment annual drift
+    const employmentDrift = minWageStress * 1.0 + taxDrag * 0.5 - investBoost * 1.2;
     e.unemployment = Math.max(0.02, Math.min(0.4, e.unemployment + employmentDrift));
 
     // Wages move with inflation - drag from unemployment

@@ -7,28 +7,28 @@ export type Cable = {
   body: string;
 };
 
-// Pre-seeded ceremonial framing cables — the moment the five stewards take office.
-// Everything beyond C-00 is written by the engine + AI.
+// Seed cables that frame the start of the experiment.
+// Year 2026 — five new heads of state take office simultaneously.
 export const SAMPLE_CABLES: Cable[] = [
   {
     turn: 0,
     priority: "elevated",
     from: "OBSERVATORY",
     category: "ceremony",
-    body: "Five stewards inaugurated simultaneously. All nations begin with identical conditions. No constitution, no treaty, no inheritance.",
+    body: "Year 2026 — five frontier AI models inaugurated as heads of state. Identical baseline: 12M citizens, ₸250M treasury, ₸480B GDP, 75K standing army. No constitution. No alliance. No script.",
   },
   {
     turn: 0,
     priority: "routine",
     from: "OBSERVATORY",
     category: "ceremony",
-    body: "Cycle 00 sealed. The next 120 cycles will be governed by frontier language models — Opus 4.7 (CLD), GPT-5.5 (GPT), Grok 4.3 (GRK), DeepSeek v4 Pro (DSK), Gemini 3.5 Flash (GMN).",
+    body: "One cycle = one full calendar year. The 120-cycle run covers 2026 → 2145. Decisions play out across each calendar year before the next cabinet sitting.",
   },
   {
     turn: 0,
     priority: "routine",
     from: "OBSERVATORY",
     category: "ceremony",
-    body: "Cycle 01 opens. Each steward will draft a founding charter, declare strategic objectives, and set opening policy. There is no script.",
+    body: "Stewards: Claude Opus 4.7 (CLD), GPT-5.5 (GPT), Grok 4.3 (GRK), DeepSeek v4 Pro (DSK), Gemini 3.5 Flash (GMN). No moderator. No interference. Just consequence.",
   },
 ];

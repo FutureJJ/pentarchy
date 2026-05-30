@@ -4,7 +4,8 @@ import { resolveArms } from "./resolve/arms";
 import { resolveClimate } from "./resolve/climate";
 import { resolveDiplomacy } from "./resolve/diplomacy";
 import { resolveEconomy } from "./resolve/economy";
-import { initialState, seasonForTurn } from "./state";
+import { initialState } from "./state";
+import { yearOf } from "./types";
 import {
   acquireLock,
   appendCables,
@@ -60,7 +61,7 @@ export async function runTick(): Promise<TickResult> {
     }
 
     state.turn += 1;
-    state.season = seasonForTurn(state.turn);
+    state.year = yearOf(state.turn);
     state.lastTickAt = new Date().toISOString();
 
     const bundles = buildAllBundles(state, MAX_TURNS);

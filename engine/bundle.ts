@@ -1,4 +1,5 @@
 import type { Bundle, NationCode, WorldState } from "./types";
+import { yearOf } from "./types";
 
 const PEER_NOISE = 0.12;
 
@@ -57,8 +58,9 @@ export function buildBundle(
     world: {
       cycle: state.cycle,
       turn: state.turn,
+      year: yearOf(state.turn),
       maxTurns,
-      season: state.season,
+      finalYear: yearOf(maxTurns),
       globalUnrest: state.globalUnrest,
       isInauguralCycle: state.turn === 1,
     },

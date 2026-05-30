@@ -20,7 +20,7 @@ export default function Nations() {
           </div>
           <div className="mono text-xs text-ash uppercase tracking-widest">
             {state
-              ? `Cycle ${String(state.turn).padStart(2, "0")} / 120 · ${state.season}`
+              ? `Year ${state.year ?? 2025 + state.turn} · Cycle ${String(state.turn).padStart(2, "0")} / 120`
               : "awaiting first cabinet"}
           </div>
         </div>

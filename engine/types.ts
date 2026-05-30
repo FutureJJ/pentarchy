@@ -166,7 +166,7 @@ export type Cable = z.infer<typeof Cable>;
 export const WorldState = z.object({
   cycle: z.number(),
   turn: z.number(),
-  season: z.enum(["spring", "summer", "autumn", "winter"]),
+  year: z.number(), // calendar year (e.g. 2026 for cycle 1)
   startedAt: z.string(),
   lastTickAt: z.string().optional(),
   globalUnrest: z.number(),
@@ -175,6 +175,11 @@ export const WorldState = z.object({
   recentCables: z.array(Cable),
 });
 export type WorldState = z.infer<typeof WorldState>;
+
+export const BASE_YEAR = 2025; // cycle 1 → year 2026, cycle 120 → year 2145
+export function yearOf(turn: number): number {
+  return BASE_YEAR + Math.max(0, turn);
+}
 
 // ===== DECISION SCHEMA — what the AI returns each cycle =====
 
@@ -285,8 +290,9 @@ export const Bundle = z.object({
   world: z.object({
     cycle: z.number(),
     turn: z.number(),
+    year: z.number(),
     maxTurns: z.number(),
-    season: z.string(),
+    finalYear: z.number(),
     globalUnrest: z.number(),
     isInauguralCycle: z.boolean(),
   }),

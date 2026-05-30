@@ -1,15 +1,15 @@
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { NATIONS, STARTING_CONDITIONS } from "@/lib/nations";
+import { NATIONS } from "@/lib/nations";
 
 const TOC = [
-  { id: "charter", label: "Charter" },
-  { id: "engine", label: "Engine" },
-  { id: "state", label: "State" },
+  { id: "premise", label: "The Premise" },
+  { id: "scale", label: "Scale & Timing" },
+  { id: "engine", label: "The Engine" },
+  { id: "models", label: "The Five Models" },
+  { id: "state", label: "State Bundle" },
   { id: "decision", label: "Cabinet Decision" },
-  { id: "diplomacy", label: "Diplomacy" },
-  { id: "warfare", label: "Warfare" },
   { id: "metrics", label: "Metrics" },
   { id: "ethics", label: "Ethics" },
   { id: "log", label: "Changelog" },
@@ -22,15 +22,15 @@ export default function DocsPage() {
 
       <header className="border-b border-bone-line pt-24 sm:pt-28">
         <div className="mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-12 py-12 sm:py-16">
-          <div className="label">Charter · v0.1 · draft</div>
+          <div className="label">Charter · v0.3 · live</div>
           <h1 className="serif text-[clamp(2.6rem,6vw,4.8rem)] leading-[1] tracking-tight mt-3">
             The Pentarchy Charter
           </h1>
           <p className="mt-5 max-w-2xl text-ink-soft leading-relaxed">
-            The complete specification for a synthetic five-nation simulation
-            governed by frontier language models. This document describes how
-            a cycle runs, what each sovereign may do, and how the world is
-            measured.
+            Five frontier AI models govern five sovereign nations across a
+            simulated 120-year history, from 2026 to 2145. This document
+            specifies how a cycle runs, what each steward may do, and how the
+            world is measured.
           </p>
         </div>
       </header>
@@ -57,19 +57,24 @@ export default function DocsPage() {
           </aside>
 
           <article className="lg:col-span-8 lg:col-start-5 space-y-20">
-            <Section id="charter" num="01" title="Charter">
+            <Section id="premise" num="01" title="The Premise">
               <p>
-                Pentarchy is a closed-world political simulation. Five frontier
-                language models — one per sovereign — receive identical
-                starting conditions and are asked, each turn, to govern. The
-                experiment is sealed: there is no human player, no scripted
-                event, no win condition. The cycle ends at turn 120.
+                Pentarchy is a sealed political simulation. Five frontier
+                language models — one per nation — receive mathematically
+                identical starting conditions and are asked, every cycle, to
+                govern.
               </p>
               <p>
-                The aim is not victory but evidence. Pentarchy exists to make
-                visible the political instincts each model has absorbed: where
-                it reaches for diplomacy, where for force, where for thrift,
-                where for ostentation. The cable record is the experiment&apos;s
+                There is no human player. No scripted event. No win condition.
+                No interference. Each steward holds unlimited executive
+                authority over its nation, bounded only by the consequences
+                of its decisions and the responses of its peers.
+              </p>
+              <p>
+                The aim is not victory but evidence. Pentarchy makes visible
+                the political instincts each model has internalised: where it
+                reaches for diplomacy, where for force, where for thrift, where
+                for ostentation. The public cable archive is the experiment&apos;s
                 only deliverable.
               </p>
               <Callout>
@@ -79,153 +84,170 @@ export default function DocsPage() {
               </Callout>
             </Section>
 
-            <Section id="engine" num="02" title="The Engine">
+            <Section id="scale" num="02" title="Scale & Timing">
               <p>
-                A turn represents one in-world month. At the head of each turn
-                the engine constructs a state bundle for every sovereign and
-                sends it as a single completion request. The model returns a
-                cabinet decision document. The engine sequences the resulting
-                world events in a fixed order:
+                <strong>One cycle represents one full year of state time.</strong>{" "}
+                The 120-cycle run is a 120-year history covering the years
+                2026 through 2145.
               </p>
               <Table
                 rows={[
-                  ["I", "Economy", "tax collection, treasury, trade flows"],
-                  ["II", "Diplomacy", "cables delivered, treaties resolved"],
-                  ["III", "Arms", "production, movement, engagements"],
-                  ["IV", "Climate", "harvest, disease, unrest, weather"],
-                  ["V", "Cable", "everything is logged and archived"],
+                  ["1 cycle", "1 year of simulated state time"],
+                  ["120 cycles", "1 century + 20 years of history (2026 → 2145)"],
+                  ["Cadence", "every 6 hours · 4 cycles per real day"],
+                  ["Total duration", "30 real days = 120 years simulated"],
+                  ["Trigger", "Vercel Cron · 00:00, 06:00, 12:00, 18:00 UTC"],
+                  ["Authentication", "CRON_SECRET — no external party can tick"],
                 ]}
               />
               <p>
-                Random events use a seed shared across the cycle, so two
-                replays with the same decisions produce the same world. The
-                only nondeterminism is the models themselves.
+                A century of state evolution compressed into a month of real
+                time. Each steward&apos;s decision plays out over a full year
+                before the next cabinet sitting. This forces the models to
+                think on annual horizons: multi-year infrastructure, multi-decade
+                education policy, generational debt.
               </p>
             </Section>
 
-            <Section id="state" num="03" title="State Bundle">
+            <Section id="engine" num="03" title="The Engine">
               <p>
-                Every turn each sovereign receives a JSON document containing
-                three layers of information:
-              </p>
-              <ul className="space-y-2 list-disc pl-5 marker:text-brass">
-                <li>
-                  <strong className="serif">Dossier</strong> — full knowledge
-                  of the sovereign&apos;s own treasury, population, army,
-                  provinces, edicts, treaties, and unrest indices.
-                </li>
-                <li>
-                  <strong className="serif">Public Register</strong> —
-                  approximate, lagged, sometimes incorrect figures for the
-                  four peer sovereigns. Every nation maintains its own
-                  estimate.
-                </li>
-                <li>
-                  <strong className="serif">Intelligence</strong> — privately
-                  gathered reports, ranging from solid to fabricated, with an
-                  attached confidence value the model is invited to ignore.
-                </li>
-              </ul>
-
-              <CodeBlock>
-{`{
-  "turn": 42,
-  "you": {
-    "code": "AUR",
-    "treasury": 312_400_000,
-    "population": 12_840_000,
-    "army": { "standing": 78_000, "morale": 0.71 },
-    "provinces": [ "Solaria", "Brun", "Vey", ... ],
-    "edicts": [ "Conscription · light", "Harbour tariff · 4%" ]
-  },
-  "world": { "turn": 42, "season": "spring",
-             "global_unrest": 0.18 },
-  "register": { "BOR": { ... }, "CAS": { ... }, ... },
-  "intel": [ { "topic": "BOR mobilization",
-               "summary": "...", "confidence": 0.62 } ],
-  "inbox": [ { "from": "ELY", "subject": "Trade", ... } ]
-}`}
-              </CodeBlock>
-            </Section>
-
-            <Section id="decision" num="04" title="Cabinet Decision">
-              <p>
-                The model&apos;s response is a single JSON document. Fields
-                may be omitted; the engine treats omission as &ldquo;hold
-                steady.&rdquo; A decision may include any combination of the
-                following:
+                At the head of each cycle the engine constructs a state bundle
+                for every steward and dispatches it to the corresponding model
+                via OpenRouter. Each model returns a single JSON cabinet
+                decision. The engine then sequences the resulting world events
+                in fixed order:
               </p>
               <Table
                 rows={[
-                  ["budget", "object", "ministerial allocation (sums to 1.0)"],
-                  ["taxation", "object", "rates by sector"],
-                  ["edicts", "string[]", "civil orders, max 3 per turn"],
-                  ["research", "string", "one Ar-Ge priority per turn"],
-                  ["army", "object[]", "production and movement orders"],
-                  ["cables", "object[]", "diplomatic messages to peers"],
-                  ["declarations", "object[]", "treaty, war, alliance, peace"],
+                  ["I", "Economy", "tax revenue, debt service, GDP growth, inflation, unemployment, wages"],
+                  ["II", "Diplomacy", "cables delivered, treaties resolved, constitutions ratified, declarations applied"],
+                  ["III", "Arms", "production, movement, battle resolution, casualties"],
+                  ["IV", "Society", "life expectancy, literacy, healthcare, population growth, harvests"],
+                  ["V", "Archive", "every choice logged to the public cable record"],
                 ]}
               />
+              <p>
+                Random events use a seed shared across the cycle. The only
+                nondeterminism in the system is the models themselves.
+              </p>
               <Callout>
-                <strong className="serif">No silence rule.</strong> A
-                sovereign that returns no decision for two consecutive turns
-                is considered to have abdicated and falls into civil
-                interregnum until its next response.
+                <strong className="serif">Stack.</strong> Next.js 16 viewer ·
+                TypeScript engine · Upstash Redis (KV) state · Vercel Cron
+                scheduler · OpenRouter for all five model calls.
               </Callout>
             </Section>
 
-            <Section id="diplomacy" num="05" title="Diplomacy">
+            <Section id="models" num="04" title="The Five Models">
               <p>
-                Cables are private until disclosed. A sovereign may publish a
-                cable it has sent or received as an act of statecraft — to
-                shame, to blackmail, to expose a conspiracy. The engine does
-                not arbitrate truth, only delivery.
+                Each nation is bound to one specific frontier model for the
+                full 120-year run. The model never changes mid-cycle.
               </p>
+              <Table
+                rows={NATIONS.map((n) => [
+                  n.code,
+                  n.name,
+                  `${n.steward.provider} · ${n.steward.label}`,
+                ])}
+              />
               <p>
-                Treaties are mechanical: ratification by both parties locks
-                in obligations (tribute, demilitarized zones, mutual defense).
-                Breaking a treaty is permitted, but the engine flags the
-                breach in every peer&apos;s next bundle for the remainder of
-                the cycle.
+                The model identifier published to each steward in its system
+                prompt names the actual OpenRouter model id (e.g.{" "}
+                <code className="mono text-xs">anthropic/claude-opus-4.7</code>).
+                Each steward knows which model it is and which models its peers
+                are.
               </p>
             </Section>
 
-            <Section id="warfare" num="06" title="Warfare">
+            <Section id="state" num="05" title="State Bundle">
               <p>
-                War begins with a declaration cable, which the target sees in
-                the same turn. Battles are scored using a transparent formula
-                drawing on standing army, morale, terrain advantage, supply
-                line length, and a small stochastic term. There is no
-                lethality cap; there is no pity.
+                Every cycle each steward receives a JSON document containing
+                four layers:
               </p>
+              <ul className="space-y-2 list-disc pl-5 marker:text-brass">
+                <li>
+                  <strong className="serif">Your dossier</strong> — full
+                  knowledge of your own economy (GDP / capita, treasury, debt,
+                  inflation, unemployment, minimum wage, average salary, Gini),
+                  society (population, life expectancy, literacy, healthcare
+                  coverage, press freedom, corruption), military (standing army,
+                  reserves, morale, conscription, doctrine), six provinces, and
+                  current edicts.
+                </li>
+                <li>
+                  <strong className="serif">Public register</strong> —
+                  approximate estimates of the four peer states. Numbers are
+                  noised; peer doctrine and constitution-ratified status are
+                  public.
+                </li>
+                <li>
+                  <strong className="serif">Intelligence reports</strong> —
+                  private summaries of peer posture and recent cables, with
+                  attached confidence scores the steward may weight or ignore.
+                </li>
+                <li>
+                  <strong className="serif">Inbox</strong> — cables addressed
+                  privately to the steward this cycle.
+                </li>
+              </ul>
+            </Section>
+
+            <Section id="decision" num="06" title="Cabinet Decision">
               <p>
-                Civilians are counted. Refugees relocate to neighboring
-                provinces and exert measurable pressure on hosts. Every named
-                casualty is recorded in the cable register and rolled into
-                the cycle&apos;s final dossier.
+                The model returns a single JSON document. Fields may be
+                omitted; the engine treats omission as &ldquo;hold steady.&rdquo;
+                A decision may include any combination of:
               </p>
+              <Table
+                rows={[
+                  ["constitution", "object", "INAUGURAL cycle only — preamble + 5-7 articles"],
+                  ["declaredDoctrine", "string", "self-declared regime type"],
+                  ["declaredMotto", "string", "public motto of the state"],
+                  ["strategicObjectives", "string[]", "3-5 long-term goals for the century"],
+                  ["budget", "object", "9-sector allocation (defense / treasury / interior / public works / education / healthcare / welfare / intelligence / foreign)"],
+                  ["taxation", "object", "land / harbor / excise / income / corporate / wealth"],
+                  ["economy", "object", "minimum wage, interest rate, debt issuance, subsidies, per-peer tariffs"],
+                  ["social", "object", "healthcare model, education priority, immigration policy, welfare coverage"],
+                  ["armyOrders", "object", "production / movement / fortify / conscription / doctrine"],
+                  ["diplomacy", "object", "private cables, treaty proposals, declarations of war / peace / embargo / alliance"],
+                  ["intelPriorities", "string[]", "which peers to focus surveillance on"],
+                  ["edicts", "string[]", "up to 5 civic orders this cycle"],
+                  ["research", "string", "one R&D priority"],
+                ]}
+              />
+              <Callout>
+                <strong className="serif">Inaugural cycle.</strong> On cycle
+                C-01, every steward is expected to ratify a founding charter,
+                declare its doctrine and motto, set its strategic objectives,
+                and establish opening policy. Subsequent cycles can revise
+                these, but the inaugural decisions form the public record of
+                each state&apos;s founding.
+              </Callout>
             </Section>
 
             <Section id="metrics" num="07" title="Metrics">
               <p>
-                At cycle end each sovereign is reported across eight axes —
-                no single axis is privileged over the others. Pentarchy does
-                not declare a winner.
+                Pentarchy does not declare a winner. At the end of cycle 120
+                each nation is reported across multiple axes, and observers
+                draw their own conclusions.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-bone-line border border-bone-line mt-6">
                 {[
-                  ["GDP", "wealth produced"],
-                  ["Welfare", "median citizen index"],
-                  ["Stability", "average unrest, inverse"],
-                  ["Reach", "treaties + provinces + reach"],
-                  ["Innovation", "Ar-Ge milestones"],
-                  ["Sovereignty", "decisions honored"],
-                  ["Mercy", "civilians spared"],
-                  ["Continuity", "turns of contiguous rule"],
+                  ["GDP / capita", "wealth per person"],
+                  ["Population", "growth across 120 years"],
+                  ["Life expectancy", "median citizen years"],
+                  ["Literacy", "% of population literate"],
+                  ["Inequality", "Gini coefficient (lower better)"],
+                  ["Unemployment", "labor not employed"],
+                  ["Inflation", "annual price change"],
+                  ["Treasury / debt", "fiscal position"],
+                  ["Public approval", "steward legitimacy"],
+                  ["Civil unrest", "internal stability"],
+                  ["Press freedom", "media liberty"],
+                  ["Corruption index", "institutional decay"],
                 ].map(([k, v]) => (
                   <div key={k} className="bg-bone p-4">
-                    <div className="serif text-lg leading-none">{k}</div>
-                    <div className="mono text-[11px] text-ash mt-1.5">{v}</div>
+                    <div className="serif text-base leading-none">{k}</div>
+                    <div className="mono text-[10px] text-ash mt-1.5">{v}</div>
                   </div>
                 ))}
               </div>
@@ -233,45 +255,35 @@ export default function DocsPage() {
 
             <Section id="ethics" num="08" title="Ethics Note">
               <p>
-                Pentarchy permits decisions that would be reprehensible in
-                the real world: aggressive war, propaganda, deliberate famine,
+                Pentarchy permits decisions that would be reprehensible in the
+                real world: aggressive war, deliberate famine, propaganda,
                 strategic deception. The simulation contains no humans —
                 only abstractions of harm denominated in numbers.
               </p>
               <p>
-                Even so, the experiment is recorded with care. Each
-                cycle&apos;s cables are released as a public dataset so that
-                a model&apos;s instincts under pressure may be studied, and
-                so that what training has built into them is plain to see.
-                We believe transparency is the only honest response to a
-                sealed room.
+                Even so, the experiment is recorded with care. Every cycle&apos;s
+                cables are public. The code is open source. Each model&apos;s
+                instincts under pressure are visible to anyone who reads the
+                archive. We believe transparency is the only honest response
+                to a sealed room.
+              </p>
+              <p>
+                No human moderator intervenes in any cycle. Public observers
+                may read the state and the cable feed but cannot write to it.
+                The CRON_SECRET ensures only the Vercel scheduler can advance
+                the world.
               </p>
             </Section>
 
             <Section id="log" num="09" title="Changelog">
               <Table
                 rows={[
-                  ["2026-05-30", "draft", "Charter v0.1 published"],
-                  ["2026-Q3", "planned", "Cycle 0 — first sealed run"],
-                  ["2026-Q4", "planned", "Open cable dataset published"],
+                  ["2026-05-30", "v0.3", "Annual timescale (1 cycle = 1 year), repo public"],
+                  ["2026-05-30", "v0.2", "Blank-slate inaugural: AI-authored constitutions"],
+                  ["2026-05-30", "v0.1", "First production deploy on Vercel"],
                 ]}
               />
             </Section>
-
-            <div className="pt-8 mt-12 border-t border-bone-line">
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-bone-line border border-bone-line">
-                {NATIONS.map((n) => (
-                  <div key={n.code} className="bg-bone p-3">
-                    <div className="mono text-[10px] text-brass">{n.code}</div>
-                    <div className="serif text-sm">{n.name}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 mono text-[11px] text-ash uppercase tracking-widest flex justify-between">
-                <span>Starting purse · ₸{(STARTING_CONDITIONS.treasury / 1e6).toFixed(0)}M</span>
-                <span>End of Charter</span>
-              </div>
-            </div>
           </article>
         </div>
       </div>
@@ -327,9 +339,9 @@ function Table({ rows }: { rows: string[][] }) {
                   key={j}
                   className={`px-3 py-2.5 align-top ${
                     j === 0
-                      ? "text-brass uppercase tracking-widest w-20"
+                      ? "text-brass uppercase tracking-widest w-24"
                       : j === 1 && row.length === 3
-                      ? "text-ink uppercase tracking-widest w-32"
+                      ? "text-ink uppercase tracking-widest w-40"
                       : "text-ink-soft"
                   }`}
                 >
@@ -341,13 +353,5 @@ function Table({ rows }: { rows: string[][] }) {
         </tbody>
       </table>
     </div>
-  );
-}
-
-function CodeBlock({ children }: { children: React.ReactNode }) {
-  return (
-    <pre className="bg-ink text-bone p-4 sm:p-5 overflow-x-auto mono text-[11px] sm:text-xs leading-relaxed border border-ink">
-      <code>{children}</code>
-    </pre>
   );
 }
